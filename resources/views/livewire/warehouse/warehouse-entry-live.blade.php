@@ -1,4 +1,13 @@
 <div>
+    {{-- 
+        SECCIÓN 1: FORMULARIO DE ENTRADA
+        ===================================
+        Formulario Livewire que permite crear nuevas entradas de productos
+        o actualizar entradas existentes.
+        
+        wire:submit="saveInventoryMovement" se ejecuta cuando el usuario
+        presiona el botón Guardar/Actualizar
+    --}}
     <form class="grid grid-cols-4 gap-3" wire:submit="saveInventoryMovement">
         <div class="form-group">
             <label for="product_id" class="form-label
@@ -93,6 +102,13 @@
         </div>
 
     </form>
+    {{-- 
+        SECCIÓN 2: BARRA DE HERRAMIENTAS Y BÚSQUEDA
+        ============================================
+        - Botón Excel: Exporta todas las entradas a un archivo Excel
+        - Botón PDF: Genera reporte PDF de entradas
+        - Campo Búsqueda: Filtra en tiempo real por nombre de producto
+    --}}
     <div class="py-2 flex gap-2">
         <button type="button" class="btn-secondary cursor-pointer"
                 wire:click="exportFile">
@@ -101,10 +117,28 @@
         <a href="{{route('reports.movement',1)}}" target="_blank" class="btn-secondary">
             <i class="fas fa-file-pdf text-2xl"></i>
         </a>
+        {{-- 
+            CAMPO DE BÚSQUEDA CON LIVEWIRE
+            ==============================
+            wire:model.live="search" = Vincula el valor del input a la propiedad $search del componente
+                                        El modificador .live hace que se actualice en tiempo real mientras escribes
+                                        
+            Flujo: Usuario escribe -> wire:model.live actualiza $search -> 
+                   render() se ejecuta -> getInventoryMovements($type, $search) filtra datos ->
+                   Vista se actualiza con resultados filtrados
+        --}}
         <input type="text" class="form-text" id="search"
                wire:model.live="search"
                placeholder="Buscar producto">
     </div>
+    {{-- 
+        SECCIÓN 3: TABLA DE RESULTADOS
+        ==============================
+        Muestra todos los movimientos de entrada filtrados por:
+        - Tipo de movimiento (Entrada)
+        - Término de búsqueda (si existe)
+        - Paginado de 50 registros por página
+    --}}
     <div class="table-container">
         <table>
             <thead>

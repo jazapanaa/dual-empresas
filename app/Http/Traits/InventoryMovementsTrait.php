@@ -9,21 +9,51 @@ use App\Models\InventoryMovement;
 use App\Models\Stock;
 use Maatwebsite\Excel\Facades\Excel;
 
+/**
+ * Trait InventoryMovementsTrait
+ * 
+ * Este trait contiene métodos para gestionar movimientos de inventario (entradas y salidas).
+ * Proporciona funcionalidad para:
+ * - Obtener movimientos filtrables por tipo (Entrada/Salida) y búsqueda de producto
+ * - Validar stock disponible antes de procesar salidas
+ * - Exportar datos a Excel
+ */
 trait InventoryMovementsTrait
 {
+    /**
+     * Obtiene movimientos de inventario filtrados por tipo y búsqueda de producto
+     * 
+     * @param string $type Tipo de movimiento: 'Entrada' o 'Salida'
+     * @param string|null $search Término de búsqueda para filtrar por nombre de producto
+     * @return \Illuminate\Database\Eloquent\Builder
+     * 
+     * Ejemplo de uso:
+     * $entries = $this->getInventoryMovements('Entrada', 'papel');
+     * // Retorna todas las entradas que contienen "papel" en el nombre del producto
+     */
     public function getInventoryMovements($type, $search = null)
     {
+        // Obtener el ID del tipo de movimiento basado en su nombre
         $movement_type_id = $this->getMovementTypeByField('name', $type)->id;
+        
+        // Construir la consulta base: filtrar por tipo de movimiento
+        // with(['product', 'warehouse']) carga las relaciones para evitar N+1 queries
         $query = InventoryMovement::where('movement_type_id', $movement_type_id)
             ->with(['product', 'warehouse']);
         
+        // Si se proporciona un término de búsqueda, filtrar por nombre de producto
         if ($search) {
+            // Normalizar el término: convertir a minúsculas, eliminar acentos
             $searchTerm = $this->normalizeString($search);
+            
+            // whereHas: busca movimientos que tengan un producto relacionado
+            // que coincida con el término de búsqueda (sin importar mayúsculas/minúsculas)
             $query->whereHas('product', function ($q) use ($searchTerm) {
                 $q->whereRaw('LOWER(name) LIKE ?', ['%' . $searchTerm . '%']);
             });
         }
         
+        // Ordenar por fecha de creación (más recientes primero)
         return $query->orderBy('created_at', 'desc');
     }
     public function getInventoryMovement($inventory_movement_id)
@@ -92,16 +122,26 @@ trait InventoryMovementsTrait
     }
     private function normalizeString($string)
     {
-        // Convertir a minúsculas
+        /**
+         * Normaliza strings para comparación sin considerar mayúsculas/minúsculas ni acentos
+         * 
+         * Ejemplo:
+         * 'Papél Higiénico' -> 'papel higienico'
+         * 'GUANTES' -> 'guantes'
+         * 'Útil' -> 'util'
+         */
+        
+        // Convertir a minúsculas usando UTF-8 para caracteres especiales
         $string = mb_strtolower($string, 'UTF-8');
 
-        // Eliminar acentos y caracteres especiales
+        // Eliminar acentos y caracteres especiales comunes en español
         $string = str_replace(
             ['á', 'é', 'í', 'ó', 'ú', 'ü', 'ñ', 'à', 'è', 'ì', 'ò', 'ù'],
             ['a', 'e', 'i', 'o', 'u', 'u', 'n', 'a', 'e', 'i', 'o', 'u'],
             $string
         );
 
+        // Eliminar espacios en blanco al inicio y final
         return trim($string);
     }
     private function getNameFileToExport($type)

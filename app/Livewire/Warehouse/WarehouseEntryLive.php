@@ -9,18 +9,61 @@ use App\Livewire\Forms\InventoryMovementsForm;
 use Livewire\Component;
 use Livewire\WithPagination;
 
+/**
+ * Componente Livewire: WarehouseEntryLive
+ * 
+ * Gestiona la interfaz de usuario para registrar ENTRADAS de productos al almacén.
+ * 
+ * Características:
+ * - Formulario para crear/actualizar entradas de inventario
+ * - Búsqueda en tiempo real de productos (filtrado por nombre)
+ * - Validación de datos
+ * - Exportación a Excel
+ * - Paginación de resultados
+ * 
+ * Flujo de datos:
+ * Usuario -> Livewire Component -> Trait (InventoryMovementsTrait) -> Base de datos
+ */
 class WarehouseEntryLive extends Component
 {
-    use InventoryMovementsTrait,MovementTypeTrait, DdlTrait, WithPagination;
+    use InventoryMovementsTrait, MovementTypeTrait, DdlTrait, WithPagination;
+    
+    // Formulario reactivo para manejar las entradas
     public InventoryMovementsForm $form;
+    
+    // Bandera para modo edición
     public bool $isEdit = false;
+    
+    // ID del movimiento a editar
     public int $inventory_movement_id;
+    
+    /**
+     * IMPORTANTE: Esta propiedad vincula el campo de búsqueda de la vista.
+     * Con wire:model.live, se actualiza automáticamente en tiempo real
+     * mientras el usuario escribe, sin necesidad de presionar un botón.
+     */
     public string $search = '';
+    
+    // Tipo de movimiento: 'Entrada' para este componente
     private string $movement_type = 'Entrada';
+    
+    /**
+     * Método render: se ejecuta cada vez que una propiedad pública cambia
+     * 
+     * Este es el corazón del componente Livewire. Se ejecuta automáticamente cuando:
+     * - La propiedad $search cambia (usuario escribe en el campo de búsqueda)
+     * - Se edita un registro
+     * - Se guarda/elimina un registro
+     * 
+     * Devuelve la vista con datos filtrados
+     */
     public function render()
     {
         return view('livewire.warehouse.warehouse-entry-live',[
+            // Obtener movimientos de tipo 'Entrada', filtrados por búsqueda, paginados
             'inventoryMovements' => $this->getInventoryMovements($this->movement_type, $this->search)->paginate(50),
+            
+            // Listados para los select del formulario
             'products' => $this->ddlProducts(),
             'warehouses' => $this->ddlWarehouses(),
         ]);
