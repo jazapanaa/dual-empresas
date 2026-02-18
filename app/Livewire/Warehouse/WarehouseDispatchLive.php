@@ -106,7 +106,7 @@ class WarehouseDispatchLive extends Component
     }
     public function deleteInventoryMovement($inventory_movement_id):void
     {
-        $this->form->delete($inventory_movement_id);
+        $this->form->delete($inventory_movement_id, $this->movement_type);
     }
     public function mount()
     {
