@@ -56,7 +56,7 @@ trait DdlTrait
 
     public function getDdl($model, $key = 'id', $value = 'code')
     {
-        return $model::query()->pluck($value, $key);
+        return $model::query()->orderBy($value)->pluck($value, $key);
     }
 
     public function getDdlWithCondition($model, $condition, $key = 'id', $value = 'name')

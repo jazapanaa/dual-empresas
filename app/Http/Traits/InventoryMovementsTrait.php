@@ -53,8 +53,8 @@ trait InventoryMovementsTrait
             });
         }
         
-        // Ordenar por fecha de creación (más recientes primero)
-        return $query->orderBy('created_at', 'desc');
+        // Ordenar por fecha de movimiento (más recientes primero)
+        return $query->orderBy('movement_date', 'desc');
     }
     public function getInventoryMovement($inventory_movement_id)
     {

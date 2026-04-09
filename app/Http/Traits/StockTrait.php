@@ -8,7 +8,10 @@ trait StockTrait
 {
     public function getStocks()
     {
-        return Stock::query();
+        return Stock::query()
+            ->join('products', 'stocks.product_id', '=', 'products.id')
+            ->select('stocks.*')
+            ->orderBy('products.name', 'asc');
     }
     public function getStock($category_id)
     {
